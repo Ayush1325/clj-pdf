@@ -364,7 +364,8 @@
                           orientation
                           page-events
                           watermark
-                          background-color] :as meta}
+                          background-color
+                          new-page-section] :as meta}
                   out]
 
   (let [[nom head] doc-header
@@ -391,7 +392,11 @@
           pdf-writer            (PdfWriter/getInstance doc output-stream-to-use)
           header-meta           (merge font-style (dissoc meta :size))
           margins               (set-margins doc left-margin right-margin top-margin bottom-margin page-numbers?)
-          header-footer-content (set-table-header-footer-event table-header table-footer header-meta doc margins page-numbers? pdf-writer header-first-page?)]
+          header-footer-content (set-table-header-footer-event table-header table-footer header-meta doc margins page-numbers? pdf-writer header-first-page?)
+          meta (if new-page-section
+                 (assoc meta :on-section-start (fn [writer doc position depth title]
+                                                 (.newPage doc)))
+                 meta)]
 
       (when background-color
         (.setPageEvent pdf-writer (background-color-applier background-color)))
@@ -400,9 +405,7 @@
         (.setPageEvent pdf-writer (watermark-stamper (assoc meta
                                                        :page-width width
                                                        :page-height height))))
-
       (doc-events pdf-writer meta)
-
       (when-not pages
         (doseq [page-event page-events]
           (.setPageEvent pdf-writer page-event))
