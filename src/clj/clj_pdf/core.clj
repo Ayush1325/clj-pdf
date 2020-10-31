@@ -394,8 +394,10 @@
           margins               (set-margins doc left-margin right-margin top-margin bottom-margin page-numbers?)
           header-footer-content (set-table-header-footer-event table-header table-footer header-meta doc margins page-numbers? pdf-writer header-first-page?)
           meta (if new-page-section
-                 (assoc meta :on-section-start (fn [writer doc position depth title]
-                                                 (.newPage doc)))
+                 (assoc meta :on-section-start
+                             (fn [writer doc position depth title]
+                               (when (not (= (second (reverse (clojure.string/trim (str (first title))))) \1))
+                                 (.newPage doc))))
                  meta)]
 
       (when background-color
